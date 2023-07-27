@@ -17,6 +17,7 @@ import java.util.zip.GZIPOutputStream;
 
 public class SignFile {
 
+    // Obtener la clave privada desde un archivo o un string
     private static PrivateKey getPrivateKey(String privKey, boolean fromString) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         if (!fromString) {
             byte[] keyBytes = Files.readAllBytes(Paths.get(privKey));
@@ -35,6 +36,7 @@ public class SignFile {
         }
     }
 
+    // Obtener la clave pública desde un archivo o un string
     private static PublicKey getPublicKey(String pubKey, boolean fromString) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         if (!fromString) {
             byte[] keyBytes = Files.readAllBytes(Paths.get(pubKey));
@@ -53,6 +55,7 @@ public class SignFile {
         }
     }
 
+    // Firma un archivo y guarda la firma en otro archivo con extensión .sign
     public static void signFile(String fileName, String privKey, boolean fromString)
             throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException,
             IOException, CertificateException, InvalidKeyException, IllegalBlockSizeException,
@@ -70,8 +73,6 @@ public class SignFile {
         } while (numRead != -1);
         fis.close();
         byte[] digitalSignature = signature.sign();
-        /*String desktopPath = System.getProperty("user.home") + File.separator;
-        String filepath = desktopPath + "TEST_HASH_SIGN.sign";*/
         String filepath = fileName.replaceAll("(?i)\\.txt$", ".sign");
         try (FileOutputStream fos = new FileOutputStream(filepath)) {
             fos.write(digitalSignature);
@@ -80,6 +81,7 @@ public class SignFile {
         }
     }
 
+    // Firma un archivo comprimido (GZip) y guarda la firma en otro archivo con extensión .sign
     public static void signFileGz(String fileName, String privKey, boolean fromString)
             throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, IOException,
             CertificateException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SignatureException, InvalidKeySpecException {
@@ -89,8 +91,6 @@ public class SignFile {
         byte[] buffer = new byte[1024];
         int numRead;
         long t1 = new Date().getTime();
-        /*String desktopPath = System.getProperty("user.home") + File.separator;
-        String filepath = desktopPath + "TEST_HASH_SIGN.sign.gz";*/
         String filepath = fileName.replaceAll("(?i)\\.txt$", ".sign");
         try (FileOutputStream fos = new FileOutputStream(filepath);
              GZIPOutputStream gos = new GZIPOutputStream(fos)) {
@@ -108,13 +108,12 @@ public class SignFile {
         }
     }
 
+    // Verifica la firma de un archivo usando la clave pública
     public static boolean verifySignature(String fileName, String pubKey, boolean fromString)
             throws KeyStoreException, IOException, UnrecoverableKeyException, NoSuchAlgorithmException,
             CertificateException, InvalidKeyException, SignatureException, InvalidKeySpecException {
         Signature signature = Signature.getInstance("SHA256withRSA");
         signature.initVerify(getPublicKey(pubKey, fromString));
-        /*String desktopPath = System.getProperty("user.home") + File.separator;
-        String filepath = desktopPath + "TEST_HASH_SIGN.sign";*/
         String filepath = fileName.replaceAll("(?i)\\.txt$", ".sign");
         byte[] receivedSignature = Files.readAllBytes(Paths.get(filepath));
         FileInputStream fis = new FileInputStream(fileName);
@@ -130,13 +129,12 @@ public class SignFile {
         return signature.verify(receivedSignature);
     }
 
+    // Verifica la firma de un archivo comprimido (GZip) usando la clave pública
     public static boolean verifySignatureGz(String fileName, String pubKey, boolean fromString)
             throws KeyStoreException, IOException, UnrecoverableKeyException, NoSuchAlgorithmException,
             CertificateException, InvalidKeyException, SignatureException, InvalidKeySpecException {
         Signature signature = Signature.getInstance("SHA256withRSA");
         signature.initVerify(getPublicKey(pubKey, fromString));
-        /*String desktopPath = System.getProperty("user.home") + File.separator;
-        String filepath = desktopPath + "TEST_HASH_SIGN.sign.gz";*/
         String filepath = fileName.replaceAll("(?i)\\.txt$", ".sign");
         byte[] receivedSignature = Files.readAllBytes(Paths.get(filepath));
         GZIPInputStream fis = new GZIPInputStream(new FileInputStream(fileName));
